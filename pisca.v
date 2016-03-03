@@ -6,7 +6,14 @@ module pisca (
 	assign led = x;
 
 	always @(posedge clk) begin
-		x <= ~x;
+		case(x)
+			0: begin
+				x <= 1'b1;
+				end
+			default: begin
+				x <= 1'b0;
+				end
+		endcase
 	end
 endmodule
 
