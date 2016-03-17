@@ -5,7 +5,7 @@ module trab2(
 	reg[31:0] c = 0;
 	reg light_on = 1;
 
-	assign  = LEDG[0]= ~ light_on;
+	assign  LEDG[0]= ~ light_on;
 
 	always @(posedge clock_50) begin
 			c <=cont+1;
