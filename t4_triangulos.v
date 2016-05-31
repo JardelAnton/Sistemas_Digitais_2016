@@ -1,3 +1,13 @@
+module sign(
+    input [11:0]PTX,
+    input [11:0]PTY,
+    input [11:0]PUX,
+    input [11:0]PUY,
+    input [11:0]PDX,
+    input [11:0]PDY,
+    output Saida
+);
+
 module Calcula(
   input [10:0]PUX,
   input [10:0]PUY,
@@ -5,79 +15,102 @@ module Calcula(
   input [10:0]PDY,
   input [10:0]PTX,
   input [10:0]PTY,
-  output Exit);
-  wire signed [23:0] Mod_1;
-  wire signed [23:0] Mod_2;
+  output Saida);
 
-  assign Mod_1 = (PUX -PTX) * (PDY -PTY);
-  assign Mod_2 = (PDX -PTX) * (PUY -PTY);
-  
-  assign Exit = Mod_1 < Mod_2;
+wire signed [11:0] a1;
+wire signed [11:0] a2;
+wire signed [11:0] a3;
+wire signed [11:0] a4;
+
+wire signed [23:0] m1;
+wire signed [23:0] m2;
+
+  assign a1 = PTX - PDX;
+  assign a2 = PUY - PDY;
+  assign a3 = PUX - PDX;
+  assign a4 = PTY - PDY;
+
+  assign m1 = a1 * a2;
+  assign m2 = a3 * a4;
+
+  assign Saida = m1 < m2;
+endmodule
+module triangulo(
+  input [11:0] PTX,
+  input [11:0] PTY,
+  input [11:0] PUX,
+  input [11:0] PUY,
+  input [11:0] PDX,
+  input [11:0] PDY,
+  input [11:0] p3x,
+  input [11:0] p3y,
+  output saida
+);
+
+
+wire P1, P2, P3;
+
+sign Pt1(PTX, PTY, PUX, PUY, PDX, PDY, P1);
+sign Pt2(PTX, PTY, PDX, PDY, p3x, p3y, P2);
+sign Pt3(PTX, PTY, p3x, p3y, PUX, PUY, P3);
+
+assign saida = P1 == P2 & P2 == P3;
 
 endmodule
 
-module Triangle(
-	  input [10:0] PointTotX,
-	  input [10:0] PointTotY,
-	  input [10:0]PUX,
-	  input [10:0]PUY,
-	  input [10:0]PDX,
-	  input [10:0]PDY,
-	  input [10:0]PTX,
-	  input [10:0]PTY,
-	  output result
-	);
-	wire Ex1, Ex2, Ex3; 
-	
-	Calcula E1(PointTotX, PointTotY,PUX,PUY,PDX,PDY, Ex1);
-	Calcula E2(PointTotX, PointTotY,PDX,PDY,PTX,PTY, Ex2);
-	Calcula E3(PointTotX, PointTotY,PTX,PTY,PUX,PUY, Ex3);
-	
-	assign result = Ex1 == Ex2 & Ex2 == Ex3;
-endmodule
+module executa;
 
+integer data_file;
+integer write_file;
+integer valor;
 
-module Test;
-	integer Write;
-	reg [10:0]X_1;
-	reg [10:0]X_2;
-	reg [10:0]X_3;
-	reg [10:0]Y_1;
-	reg [10:0]Y_2;
-	reg [10:0]Y_3;
-	reg [10:0]PointX;
-	reg [10:0]PointY;
-	reg CLK;
-	reg rst;
-	
-	Triangle A(PointX,PointY,X_1,Y_1,X_2,Y_2,X_3,Y_3,Exit);
-	
-	initial begin
-		Write = $fopen("result.txt", "w");
-		$dumpvars(0, A);
-			#0;
-				X_1 <=0;
-				Y_1 <=0;
-				X_2 <=10;
-				Y_2 <=0;
-				X_3 <=0;
-				Y_3 <=10;
-				PointX <=3;
-				PointY <=3;
-			#5;
-				$fdisplay(Write, "%d", Exit);
-			#6;
-				X_1 <=15;
-				Y_1 <=15;
-				X_2 <=30;
-				Y_2 <=0;
-				X_3 <=15;
-				Y_3 <=0;
-				PointX <=3;
-				PointY <=3;
-			#9;
-				$fdisplay(Write, "%d", Exit);
-			#10;
-		$finish;
-	end
+reg signed [11:0] PTX;
+reg signed [11:0] PTY;
+reg signed [11:0] PUX;
+reg signed [11:0] PUY;
+reg signed [11:0] PDX;
+reg signed [11:0] PDY;
+reg signed [11:0] p3x;
+reg signed [11:0] p3y;
+wire saida;
+reg state = 0;
+triangulo T(PTX, PTY, PUX, PUY, PDX, PDY, p3x, p3y, saida);
+
+initial begin
+  data_file = $fopen("entrada.txt", "r");
+  write_file = $fopen("saida_verilog.txt", "w");
+  if (data_file == 0) begin
+    $display("ERRO!! Nao foi possivel abrir arquivo para leitura");
+    $finish;
+  end else begin
+    $display("Arquivo para leitura aberto!");
+  end
+  if (write_file == 0) begin
+    $display("ERRO!! Nao foi possivel abrir arquivo para escrita");
+    $finish;
+  end else begin
+    $display("Arquivo para escrita aberto!");
+  end
+end
+
+always #2 begin
+  if (!$feof(data_file)) begin
+	  if (state != 0)begin
+
+	    $fdisplay(write_file, "%d%d %d %d %d %d %d %d = %d",
+	      PTX, PTY, PUX, PUY, PDX, PDY, p3x, p3y, saida);
+
+	    valor = $fscanf(data_file, "%d %d %d %d %d %d %d %d\n",
+	      PTX, PTY, PUX, PUY, PDX, PDY, p3x, p3y);
+	  end else begin
+		valor = $fscanf(data_file, "%d %d %d %d %d %d %d %d\n",
+	      PTX, PTY, PUX, PUY, PDX, PDY, p3x, p3y);
+		state = 1;
+  	end
+  end
+  else begin
+    $finish;
+  end
+end
+
 endmodule
