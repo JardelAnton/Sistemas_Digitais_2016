@@ -8,15 +8,6 @@ module sign(
     output Saida
 );
 
-module Calcula(
-  input [10:0]PUX,
-  input [10:0]PUY,
-  input [10:0]PDX,
-  input [10:0]PDY,
-  input [10:0]PTX,
-  input [10:0]PTY,
-  output Saida);
-
 wire signed [11:0] a1;
 wire signed [11:0] a2;
 wire signed [11:0] a3;
